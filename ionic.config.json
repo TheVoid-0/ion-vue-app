@@ -1,0 +1,7 @@
+{
+  "name": "AppFinancas",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}
