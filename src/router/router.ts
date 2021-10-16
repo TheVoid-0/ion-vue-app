@@ -7,18 +7,25 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/login'
   },
   {
-    path: '/folder/:id',
-    component: () => import('../views/Folder.vue')
+    path: '/dashboard',
+    component: () => import('../views/Dashboard.vue'),
+    children: [{
+      path: ':id',
+      component: () => import('../views/Folder.vue'),
+      props: true
+    }] 
   },
   {
     path: '/login',
+    name: 'login',
     component: () => import('../views/Login.vue')
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes
+  routes,
+  
 })
 
 export default router

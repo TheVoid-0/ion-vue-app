@@ -1,14 +1,19 @@
 <template>
-  <button @click="login()">TESTE</button>
+  <div>
+    <ion-button @click="login()">Sign In</ion-button>
+  </div>
 </template>
 
 <script>
 import { defineComponent } from "@vue/runtime-core";
+import { IonButton } from "@ionic/vue";
 import googleApiService from "../services/gapi.service";
 
 export default defineComponent({
   name: "Login",
-  components: {},
+  components: {
+    IonButton
+  },
   methods: {
     login() {
       googleApiService.getAuthInstance().subscribe({
@@ -17,14 +22,22 @@ export default defineComponent({
           googleApiService
             .getSignInStateChange()
             .subscribe({ next: this.signInStateListener });
-            googleAuth.signIn();
+          googleAuth.signIn().then(async () => {
+            console.log("signIn");
+            const user = await googleApiService.getCurrentUser();
+            this.$router.push({
+              path: `/dashboard/${user.getBasicProfile().getName()}`,
+            });
+          });
         },
       });
     },
-    signInStateListener(value) {
+    async signInStateListener(value) {
+      console.log("signInStateListener");
       if (value) {
-        // this.$router.push({ path: "/folder/inbox" });
-        console.log(value)
+        const user = await googleApiService.getCurrentUser();
+        console.log("current user", user);
+        console.log(value);
       } else {
         console.log("deslogou", value);
       }
@@ -33,5 +46,11 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
+div { 
+  height:100%;
+  display:flex;
+  justify-content: center;
+  align-items:center;
+}
 </style>

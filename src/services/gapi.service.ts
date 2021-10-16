@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable } from "rxjs";
+import { BehaviorSubject, Observable, firstValueFrom } from "rxjs";
 
 const script = document.createElement('script');
 
@@ -84,6 +84,11 @@ class GoogleApiService {
                 }
             })
         });
+    }
+
+    async getCurrentUser(): Promise<any> {
+        const googleAuth = await firstValueFrom(this.getAuthInstance());
+        return googleAuth.currentUser.get();
     }
 
     onReady() {

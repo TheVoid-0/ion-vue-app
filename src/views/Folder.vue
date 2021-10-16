@@ -5,28 +5,21 @@
         <ion-buttons slot="start">
           <ion-menu-button color="primary"></ion-menu-button>
         </ion-buttons>
-        <ion-title>{{ $route.params.id }}</ion-title>
+        <ion-title>{{ id }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true">
       <ion-header collapse="condense">
         <ion-toolbar>
-          <ion-title size="large">{{ $route.params.id }}</ion-title>
+          <ion-title size="large">{{ id }}</ion-title>
         </ion-toolbar>
       </ion-header>
 
       <div id="container">
         <strong class="capitalize">{{ $route.params.id }}</strong>
-        <p>
-          Explore
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://ionicframework.com/docs/components"
-            >UI Components</a
-          >
-        </p>
+        <br>
+        <ion-button @click="signOut()">Sign out</ion-button>
       </div>
 
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
@@ -39,6 +32,8 @@
 </template>
 
 <script lang="ts">
+import googleApiService from "../services/gapi.service";
+
 import {
   IonButtons,
   IonContent,
@@ -50,6 +45,7 @@ import {
   IonIcon,
   IonFab,
   IonFabButton,
+  IonButton
 } from "@ionic/vue";
 
 import { add } from "ionicons/icons";
@@ -58,6 +54,9 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "Folder",
+  props: {
+    id: { type: String, required: true },
+  },
   components: {
     IonButtons,
     IonContent,
@@ -69,11 +68,24 @@ export default defineComponent({
     IonIcon,
     IonFab,
     IonFabButton,
+    IonButton
   },
   setup() {
     return {
       add,
     };
+  },
+  methods: {
+    signOut() {
+      googleApiService.getAuthInstance().subscribe({
+        next: (googleAuth) => {
+          googleAuth.signOut().then(() => {
+            googleAuth.currentUser.get().reloadAuthResponse();
+            location.href = 'login';
+          });
+        },
+      });
+    },
   },
 });
 </script>
