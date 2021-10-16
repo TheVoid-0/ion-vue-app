@@ -18,7 +18,7 @@
 
       <div id="container">
         <strong class="capitalize">{{ $route.params.id }}</strong>
-        <br>
+        <br />
         <ion-button @click="signOut()">Sign out</ion-button>
       </div>
 
@@ -45,7 +45,7 @@ import {
   IonIcon,
   IonFab,
   IonFabButton,
-  IonButton
+  IonButton,
 } from "@ionic/vue";
 
 import { add } from "ionicons/icons";
@@ -68,7 +68,7 @@ export default defineComponent({
     IonIcon,
     IonFab,
     IonFabButton,
-    IonButton
+    IonButton,
   },
   setup() {
     return {
@@ -77,13 +77,16 @@ export default defineComponent({
   },
   methods: {
     signOut() {
-      googleApiService.getAuthInstance().subscribe({
-        next: (googleAuth) => {
-          googleAuth.signOut().then(() => {
+      googleApiService.getAuthInstance().then((googleAuth) => {
+        googleAuth
+          .signOut()
+          .then(() => {
             googleAuth.currentUser.get().reloadAuthResponse();
-            location.href = 'login';
+            location.href = "login";
+          })
+          .catch((error: any) => {
+            console.log(error);
           });
-        },
       });
     },
   },

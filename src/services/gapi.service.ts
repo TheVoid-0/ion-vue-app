@@ -1,33 +1,33 @@
 import { BehaviorSubject, Observable, firstValueFrom } from "rxjs";
 
-const script = document.createElement('script');
+const SCRIPT = document.createElement('script');
+const GAPI_URL = 'https://apis.google.com/js/api.js'
 
 class GoogleApiService {
 
     private gapi: any;
     private googleAuth: any;
-    private isReady: BehaviorSubject<any | undefined> = new BehaviorSubject<boolean | undefined>(undefined);
+    private isReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     constructor() {
         console.log('construtor');
-        const apiUrl = 'https://apis.google.com/js/api.js'
-        script.type = "text/javascript"
-        script.src = apiUrl
-        script.onload = this.onLoad.bind(this);
-        script.setAttribute('onreadystatechange', 'script.onload')
-        document.getElementsByTagName('head')[0].appendChild(script)
+        SCRIPT.type = "text/javascript"
+        SCRIPT.src = GAPI_URL
+        SCRIPT.onload = this.onLoad.bind(this);
+        SCRIPT.setAttribute('onreadystatechange', 'SCRIPT.onload')
+        document.getElementsByTagName('head')[0].appendChild(SCRIPT)
     }
 
     private onLoad() {
         console.log('onload')
-        if (!(script as any).readyState || /loaded|complete/.test((script as any).readyState)) {
+        if (!(SCRIPT as any).readyState || /loaded|complete/.test((SCRIPT as any).readyState)) {
             this.gapi = (window as any).gapi;
             this.gapi.load('client:auth2', this.initClient.bind(this));
-            console.log('script carregado', this.gapi)
+            console.log('SCRIPT carregado', this.gapi)
         } else {
             console.log('Script não carregou corretamente')
             this.isReady.error('Não carregou corretamente');
-            // TODO: script não carregou corretamente
+            // TODO: SCRIPT não carregou corretamente
         }
     }
 
@@ -47,21 +47,25 @@ class GoogleApiService {
             'scope': 'https://www.googleapis.com/auth/drive.metadata.readonly'
         }).then(() => {
             console.log('gClient inicializado');
-            this.isReady.next(this.gapi);
+            this.isReady.next(true);
         })
     }
 
-    setSignInStateChangeListener(callback: Function) {
-        this.googleAuth.isSignedIn.listen(callback);
-    }
+    // setSignInStateChangeListener(callback: Function) {
+    //     this.googleAuth.isSignedIn.listen(callback);
+    // }
 
-    getSignInStateChange() {
+    /**
+     * 
+     * @returns um observable na qual o listener receberá a mudança no status de login
+     */
+    getSignInStateChange(): Observable<boolean> {
         return new Observable(subscribe => {
             // Listen for sign-in state changes.
             this.googleAuth.isSignedIn.listen(() => {
-                console.log('mudo');
+                console.log('signInStateChanged');
                 if (this.googleAuth.isSignedIn.get()) {
-                    subscribe.next(true)
+                    subscribe.next(true);
                 } else {
                     subscribe.next(false);
                 }
@@ -70,14 +74,20 @@ class GoogleApiService {
         });
     }
 
-    getAuthInstance(): Observable<any> {
+    /**
+     * 
+     * @see {@link getAuthInstance} <- prefira usar onde possível já que o valor retornado por esse observable não será atualizado e poupa a utilização do firstValueFrom já que o toPromise foi depreciado
+     * 
+     * @returns a instância do GoogleAuth da gapi como valor do observable quando a API estiver pronta. Se a API já estiver carregada quando essa função for chamada, retorna o GoogleAuth imediatamente
+     */
+    getAuthInstanceAsObservable(): Observable<any> {
         return new Observable(subscribe => {
             this.isReady.subscribe({
-                next: (gapi) => {
-                    if (!gapi) {
+                next: (ready) => {
+                    if (!ready) {
                         return
                     }
-                    this.googleAuth = gapi.auth2.getAuthInstance();
+                    this.googleAuth = this.gapi.auth2.getAuthInstance();
                     subscribe.next(this.googleAuth);
                 }, error: (error) => {
                     console.log(error);
@@ -86,12 +96,27 @@ class GoogleApiService {
         });
     }
 
+    /**
+     * 
+     * @returns a instância do GoogleAuth da gapi quando a API estiver pronta.
+     */
+    async getAuthInstance(): Promise<any> {
+        if (await firstValueFrom(this.isReady)) {
+            return this.gapi.auth2.getAuthInstance();
+        }
+        throw Error('GAPI não está disponível');
+    }
+
     async getCurrentUser(): Promise<any> {
-        const googleAuth = await firstValueFrom(this.getAuthInstance());
+        const googleAuth = await this.getAuthInstance();
         return googleAuth.currentUser.get();
     }
 
-    onReady() {
+    /**
+     * 
+     * @returns a instância da gapi como valor do observable quando ela for carregada. Se a API já estiver carregada quando essa função for chamada, retorna a API imediatamente
+     */
+    onReady(): Observable<any> {
         return this.isReady.asObservable();
     }
 }

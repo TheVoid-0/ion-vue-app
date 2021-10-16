@@ -12,25 +12,28 @@ import googleApiService from "../services/gapi.service";
 export default defineComponent({
   name: "Login",
   components: {
-    IonButton
+    IonButton,
   },
   methods: {
     login() {
-      googleApiService.getAuthInstance().subscribe({
-        next: (googleAuth) => {
-          console.log(googleAuth);
-          googleApiService
-            .getSignInStateChange()
-            .subscribe({ next: this.signInStateListener });
-          googleAuth.signIn().then(async () => {
-            console.log("signIn");
-            const user = await googleApiService.getCurrentUser();
-            this.$router.push({
-              path: `/dashboard/${user.getBasicProfile().getName()}`,
-            });
+      googleApiService.getAuthInstance().then((googleAuth) => {
+        console.log(googleAuth);
+
+        googleApiService
+          .getSignInStateChange()
+          .subscribe({ next: this.signInStateListener });
+
+        googleAuth.signIn().then(async () => {
+          console.log("signIn");
+          const user = await googleApiService.getCurrentUser();
+          this.$router.push({
+            path: `/dashboard/${user.getBasicProfile().getName()}`,
           });
-        },
+
+        });
+
       });
+      
     },
     async signInStateListener(value) {
       console.log("signInStateListener");
@@ -47,10 +50,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
-div { 
-  height:100%;
-  display:flex;
+div {
+  height: 100%;
+  display: flex;
   justify-content: center;
-  align-items:center;
+  align-items: center;
 }
 </style>
