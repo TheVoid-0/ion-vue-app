@@ -17,7 +17,7 @@ export default defineComponent({
   methods: {
     login() {
       googleApiService.getAuthInstance().then((googleAuth) => {
-        console.log(googleAuth);
+        console.log(googleAuth, 'Login.vue AuthInstance inicializado');
 
         googleApiService
           .getSignInStateChange()
